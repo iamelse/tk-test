@@ -8,7 +8,7 @@
     :moduleTitle="'Hospital'" 
     :items="$hospitals"
     :columns="['#','Hospital Name','Address','Email','Phone']"
-    :fields="['id','name','address','email','phone']"
+    :fields="['name','address','email','phone']"
     :indexRoute="route('hospital.index')"
 />
 
@@ -16,122 +16,126 @@
 @endsection
 
 @section('bottom-scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function() {
   const module = 'hospital';
-  const modalEl = document.getElementById(`${module}Modal`);
-  const modal = new bootstrap.Modal(modalEl);
-  const form = document.getElementById(`${module}Form`);
-  const saveBtn = document.getElementById(`saveHospitalBtn`);
-  const modalTitle = document.getElementById(`${module}ModalLabel`);
-  const alertContainer = document.getElementById('alertContainer');
+  const $modal = $(`#${module}Modal`);
+  const $form = $(`#${module}Form`);
+  const $saveBtn = $('#saveHospitalBtn');
+  const $modalTitle = $(`#${module}ModalLabel`);
+  const $alertContainer = $('#alertContainer');
 
   const showAlert = (message, type='success') => {
-    alertContainer.innerHTML = `
+    $alertContainer.html(`
       <div class="alert alert-${type} alert-dismissible fade show" role="alert">
         <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
-    `;
+    `);
   };
 
   const clearErrors = () => {
-    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-    form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    $form.find('.is-invalid').removeClass('is-invalid');
+    $form.find('.invalid-feedback').text('');
   };
 
   const resetForm = () => {
-    form.reset();
-    form.querySelector('#hospital_id').value = '';
+    $form[0].reset();
+    $form.find('#hospital_id').val('');
     clearErrors();
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = 'Save';
+    $saveBtn.prop('disabled', false).text('Save');
   };
 
-  const httpRequest = async (url, method, body=null) => {
-    const options = { method, headers: {'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'} };
-    if(body) options.body = body;
-    const res = await fetch(url, options);
-    return await res.json();
+  const httpRequest = (url, method, data=null) => {
+    return $.ajax({
+      url: url,
+      method: method,
+      data: data,
+      processData: false,
+      contentType: false,
+      headers: {'X-CSRF-TOKEN':'{{ csrf_token() }}'},
+    });
   };
 
   // Show alert from sessionStorage
   const successMessage = sessionStorage.getItem('hospital_alert');
-  if(successMessage){ showAlert(successMessage,'success'); sessionStorage.removeItem('hospital_alert'); }
+  if(successMessage){ 
+    showAlert(successMessage, 'success'); 
+    sessionStorage.removeItem('hospital_alert'); 
+  }
 
-  modalEl.addEventListener('hidden.bs.modal', resetForm);
+  $modal.on('hidden.bs.modal', resetForm);
 
   // Open Create Modal
-  document.querySelector('.open-create-modal').addEventListener('click', () => {
-    modalTitle.textContent = 'Create New Hospital';
+  $('.open-create-modal').on('click', function() {
+    $modalTitle.text('Create New Hospital');
     resetForm();
   });
 
   // Edit buttons
-  document.querySelectorAll('.edit-hospital-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      modalTitle.textContent = 'Edit Hospital';
-      form.querySelector('#hospital_id').value = btn.dataset.id;
-      form.querySelector('#name').value = btn.dataset.name;
-      form.querySelector('#address').value = btn.dataset.address;
-      form.querySelector('#email').value = btn.dataset.email;
-      form.querySelector('#phone').value = btn.dataset.phone;
-      modal.show();
-    });
+  $('.edit-hospital-btn').on('click', function() {
+    const btn = $(this);
+    $modalTitle.text('Edit Hospital');
+    $form.find('#hospital_id').val(btn.data('id'));
+    $form.find('#name').val(btn.data('name'));
+    $form.find('#address').val(btn.data('address'));
+    $form.find('#email').val(btn.data('email'));
+    $form.find('#phone').val(btn.data('phone'));
+    const modal = bootstrap.Modal.getOrCreateInstance($modal[0]);
+    modal.show();
   });
 
   // Save / Update
-  saveBtn.addEventListener('click', async ()=>{
+  $saveBtn.on('click', function() {
     clearErrors();
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = 'Saving...';
+    $saveBtn.prop('disabled', true).text('Saving...');
 
-    const id = form.querySelector('#hospital_id').value;
+    const id = $form.find('#hospital_id').val();
     const url = id ? `{{ url('hospital') }}/${id}` : `{{ route('hospital.store') }}`;
-    const formData = new FormData(form);
+    const formData = new FormData($form[0]);
     if(id) formData.append('_method','PUT');
 
-    try{
-      const data = await httpRequest(url,'POST',formData);
-      if(data.success){
-        sessionStorage.setItem('hospital_alert', id?'Hospital updated successfully!':'Hospital created successfully!');
-        location.reload();
-      } else if(data.errors){
-        Object.entries(data.errors).forEach(([field,messages])=>{
-          const input = form.querySelector(`[name="${field}"]`);
-          const errorEl = document.getElementById(`error-${field}`);
-          if(input) input.classList.add('is-invalid');
-          if(errorEl) errorEl.textContent = messages[0];
-        });
-      }
-    } catch(err){
-      console.error(err);
-      showAlert('Failed to save data.','danger');
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = 'Save';
-    }
+    httpRequest(url, 'POST', formData)
+      .done(function(data) {
+        if(data.success){
+          sessionStorage.setItem('hospital_alert', id ? 'Hospital updated successfully!' : 'Hospital created successfully!');
+          location.reload();
+        } else if(data.errors) {
+          $.each(data.errors, function(field, messages){
+            const $input = $form.find(`[name="${field}"]`);
+            const $errorEl = $(`#error-${field}`);
+            $input.addClass('is-invalid');
+            if($errorEl.length) $errorEl.text(messages[0]);
+          });
+        }
+      })
+      .fail(function() {
+        showAlert('Failed to save data.','danger');
+      })
+      .always(function() {
+        $saveBtn.prop('disabled', false).text('Save');
+      });
   });
 
   // Delete
-  document.addEventListener('click', async e=>{
-    const deleteBtn = e.target.closest('.delete-hospital-btn');
-    if(!deleteBtn) return;
-    const id = deleteBtn.dataset.id;
-    const name = deleteBtn.dataset.name;
+  $(document).on('click', '.delete-hospital-btn', function() {
+    const $btn = $(this);
+    const id = $btn.data('id');
+    const name = $btn.data('name');
     if(!confirm(`Are you sure you want to delete hospital "${name}"?`)) return;
-    try{
-      const data = await httpRequest(`{{ url('hospital') }}/${id}`,'DELETE');
-      if(data.success){
-        sessionStorage.setItem('hospital_alert','Hospital deleted successfully!');
-        location.reload();
-      } else showAlert(data.message||'Failed to delete hospital!','danger');
-    } catch(err){
-      console.error(err);
-      showAlert('An unexpected error occurred.','danger');
-    }
-  });
 
+    httpRequest(`{{ url('hospital') }}/${id}`, 'DELETE')
+      .done(function(data) {
+        if(data.success){
+          sessionStorage.setItem('hospital_alert','Hospital deleted successfully!');
+          location.reload();
+        } else showAlert(data.message || 'Failed to delete hospital!','danger');
+      })
+      .fail(function() {
+        showAlert('An unexpected error occurred.','danger');
+      });
+  });
 });
 </script>
 @endsection

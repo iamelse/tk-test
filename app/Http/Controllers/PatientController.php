@@ -21,7 +21,7 @@ class PatientController extends Controller
                    ->paginate(10)
                    ->withQueryString();
 
-        $hospitals = Hospital::all();
+        $hospitals = Hospital::orderBy('name', 'asc')->get();
 
         return view('pages.patient.index', [
             'title' => 'Patient Dashboard',

@@ -8,7 +8,7 @@
     :moduleTitle="'Patient'" 
     :items="$patients"
     :columns="['#','Patient Name','Address','Phone','Hospital']"
-    :fields="['id','name','address','phone','hospital_name']"
+    :fields="['name','address','phone','hospital_name']"
     :indexRoute="route('patient.index')"
     :showHospitalFilter="$showHospitalFilter"
     :hospitals="$hospitals"
@@ -18,130 +18,129 @@
 @endsection
 
 @section('bottom-scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+        crossorigin="anonymous"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+$(function() {
   const module = 'patient';
-  const modalEl = document.getElementById(`${module}Modal`);
-  const modal = new bootstrap.Modal(modalEl);
-  const form = document.getElementById(`${module}Form`);
-  const saveBtn = document.getElementById(`savePatientBtn`);
-  const modalTitle = document.getElementById(`${module}ModalLabel`);
-  const alertContainer = document.getElementById('alertContainer');
+  const $modal = $(`#${module}Modal`);
+  const $form = $(`#${module}Form`);
+  const $saveBtn = $('#savePatientBtn');
+  const $modalTitle = $(`#${module}ModalLabel`);
+  const $alertContainer = $('#alertContainer');
+  const modalInstance = new bootstrap.Modal($modal[0]);
 
   const showAlert = (message, type='success') => {
-    alertContainer.innerHTML = `
+    $alertContainer.html(`
       <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+        <strong>${type==='success'?'Success!':'Error!'}</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
-    `;
+    `);
   };
 
   const clearErrors = () => {
-    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-    form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    $form.find('.is-invalid').removeClass('is-invalid');
+    $form.find('.invalid-feedback').text('');
   };
 
   const resetForm = () => {
-    form.reset();
-    form.querySelector('#patient_id').value = '';
+    $form[0].reset();
+    $form.find('#patient_id').val('');
     clearErrors();
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = 'Save';
+    $saveBtn.prop('disabled', false).text('Save');
   };
 
-  const httpRequest = async (url, method, body=null) => {
-    const options = { method, headers: {'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'} };
-    if(body) options.body = body;
-    const res = await fetch(url, options);
-    return await res.json();
+  const httpRequest = (url, method, data=null) => {
+    return $.ajax({
+      url: url,
+      method: method,
+      data: data,
+      processData: false,
+      contentType: false,
+      headers: {'X-CSRF-TOKEN':'{{ csrf_token() }}'}
+    });
   };
 
   // Show alert from sessionStorage
   const successMessage = sessionStorage.getItem('patient_alert');
-  if(successMessage){ showAlert(successMessage,'success'); sessionStorage.removeItem('patient_alert'); }
+  if(successMessage){ 
+    showAlert(successMessage,'success'); 
+    sessionStorage.removeItem('patient_alert'); 
+  }
 
-  modalEl.addEventListener('hidden.bs.modal', resetForm);
+  $modal.on('hidden.bs.modal', resetForm);
 
   // Open Create Modal
-  document.querySelector('.open-create-modal').addEventListener('click', () => {
-    modalTitle.textContent = 'Create New Patient';
+  $('.open-create-modal').on('click', function() {
+    $modalTitle.text('Create New Patient');
     resetForm();
   });
 
   // Edit buttons
-  document.querySelectorAll('.edit-patient-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      modalTitle.textContent = 'Edit Patient';
-      form.querySelector('#patient_id').value = btn.dataset.id;
-      form.querySelector('#name').value = btn.dataset.name;
-      form.querySelector('#address').value = btn.dataset.address;
-      form.querySelector('#phone').value = btn.dataset.phone;
-
-      // Set hospital_id
-      const hospitalSelect = form.querySelector('#hospital_id');
-      if(btn.dataset.hospitalId){
-        hospitalSelect.value = btn.dataset.hospitalId;
-      } else {
-        hospitalSelect.value = '';
-      }
-
-      modal.show();
-    });
+  $('.edit-patient-btn').on('click', function() {
+    const $btn = $(this);
+    $modalTitle.text('Edit Patient');
+    $form.find('#patient_id').val($btn.data('id'));
+    $form.find('#name').val($btn.data('name'));
+    $form.find('#address').val($btn.data('address'));
+    $form.find('#phone').val($btn.data('phone'));
+    $form.find('#hospital_id').val($btn.data('hospital-id') || '');
+    modalInstance.show();
   });
 
   // Save / Update
-  saveBtn.addEventListener('click', async ()=>{
+  $saveBtn.on('click', function() {
     clearErrors();
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = 'Saving...';
-
-    const id = form.querySelector('#patient_id').value;
+    $saveBtn.prop('disabled', true).text('Saving...');
+    
+    const id = $form.find('#patient_id').val();
     const url = id ? `{{ url('patient') }}/${id}` : `{{ route('patient.store') }}`;
-    const formData = new FormData(form);
+    const formData = new FormData($form[0]);
     if(id) formData.append('_method','PUT');
 
-    try{
-      const data = await httpRequest(url,'POST',formData);
-      if(data.success){
-        sessionStorage.setItem('patient_alert', id?'Patient updated successfully!':'Patient created successfully!');
-        location.reload();
-      } else if(data.errors){
-        Object.entries(data.errors).forEach(([field,messages])=>{
-          const input = form.querySelector(`[name="${field}"]`);
-          const errorEl = document.getElementById(`error-${field}`);
-          if(input) input.classList.add('is-invalid');
-          if(errorEl) errorEl.textContent = messages[0];
-        });
-      }
-    } catch(err){
-      console.error(err);
-      showAlert('Failed to save data.','danger');
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = 'Save';
-    }
+    httpRequest(url,'POST',formData)
+      .done(function(data){
+        if(data.success){
+          sessionStorage.setItem('patient_alert', id ? 'Patient updated successfully!' : 'Patient created successfully!');
+          location.reload();
+        } else if(data.errors){
+          $.each(data.errors, function(field, messages){
+            const $input = $form.find(`[name="${field}"]`);
+            const $errorEl = $(`#error-${field}`);
+            $input.addClass('is-invalid');
+            if($errorEl.length) $errorEl.text(messages[0]);
+          });
+        }
+      })
+      .fail(function(){
+        showAlert('Failed to save data.','danger');
+      })
+      .always(function(){
+        $saveBtn.prop('disabled', false).text('Save');
+      });
   });
 
   // Delete
-  document.addEventListener('click', async e=>{
-    const deleteBtn = e.target.closest('.delete-patient-btn');
-    if(!deleteBtn) return;
-    const id = deleteBtn.dataset.id;
-    const name = deleteBtn.dataset.name;
+  $(document).on('click','.delete-patient-btn',function() {
+    const $btn = $(this);
+    const id = $btn.data('id');
+    const name = $btn.data('name');
     if(!confirm(`Are you sure you want to delete patient "${name}"?`)) return;
-    try{
-      const data = await httpRequest(`patient) }}/${id}`,'DELETE');
-      if(data.success){
-        sessionStorage.setItem('patient_alert','Patient deleted successfully!');
-        location.reload();
-      } else showAlert(data.message||'Failed to delete patient!','danger');
-    } catch(err){
-      console.error(err);
-      showAlert('An unexpected error occurred.','danger');
-    }
-  });
 
+    httpRequest(`{{ url('patient') }}/${id}`,'DELETE')
+      .done(function(data){
+        if(data.success){
+          sessionStorage.setItem('patient_alert','Patient deleted successfully!');
+          location.reload();
+        } else showAlert(data.message||'Failed to delete patient!','danger');
+      })
+      .fail(function(){
+        showAlert('An unexpected error occurred.','danger');
+      });
+  });
 });
 </script>
 @endsection

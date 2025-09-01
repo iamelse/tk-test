@@ -58,9 +58,15 @@
       <tbody>
         @forelse($items as $item)
           <tr>
+            {{-- Nomor urut --}}
+            <td>{{ $loop->iteration }}</td>
+
+            {{-- Data field --}}
             @foreach($fields as $field)
               <td>{{ $item[$field] ?? '' }}</td>
             @endforeach
+
+            {{-- Actions --}}
             <td class="text-center">
               <div class="dropdown">
                 <button class="btn btn-sm btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -73,12 +79,12 @@
                       data-{{ $field }}="{{ $item[$field] ?? '' }}"
                     @endforeach
                     data-hospital-id="{{ $item->hospital_id }}">
-                      <i class="bx bx-edit-alt me-1"></i>Edit
+                    <i class="bx bx-edit-alt me-1"></i>Edit
                   </a>
                   <a href="javascript:void(0);" 
-                     class="dropdown-item text-danger delete-{{ $module }}-btn"
-                     data-id="{{ $item->id }}"
-                     data-name="{{ $item->name ?? '' }}">
+                    class="dropdown-item text-danger delete-{{ $module }}-btn"
+                    data-id="{{ $item->id }}"
+                    data-name="{{ $item->name ?? '' }}">
                     <i class="bx bx-trash me-1"></i>Delete
                   </a>
                 </div>
