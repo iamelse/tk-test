@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Hospital\StoreRequestHospital;
-use App\Http\Requests\UpdateRequestHospital;
+use App\Http\Requests\Hospital\UpdateRequestHospital;
 use App\Models\Hospital;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
