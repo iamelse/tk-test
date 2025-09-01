@@ -21,9 +21,6 @@ class HospitalFactory extends Factory
             'address' => $this->faker->address,
             'phone' => $this->faker->phoneNumber,
             'email' => $this->faker->unique()->safeEmail,
-            'website' => $this->faker->domainName,
-            'capacity' => $this->faker->numberBetween(50, 500),
-            'established_at' => $this->faker->date('Y-m-d', 'now'),
         ];
     }
 }

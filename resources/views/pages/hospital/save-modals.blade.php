@@ -33,12 +33,6 @@
             <input type="text" name="phone" id="phone" class="form-control">
             <div class="invalid-feedback" id="error-phone"></div>
           </div>
-
-          <div class="mb-3">
-            <label for="capacity" class="form-label">Capacity</label>
-            <input type="number" name="capacity" id="capacity" class="form-control">
-            <div class="invalid-feedback" id="error-capacity"></div>
-          </div>
         </form>
       </div>
       <div class="modal-footer">

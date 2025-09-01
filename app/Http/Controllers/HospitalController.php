@@ -26,27 +26,41 @@ class HospitalController extends Controller
 
     public function store(StoreRequestHospital $request): JsonResponse
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
+            $hospital = Hospital::create($validated);
 
-        $hospital = Hospital::create($validated);
-
-        return response()->json([
-            'message' => 'Hospital created successfully!',
-            'hospital' => $hospital
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Hospital created successfully!',
+                'hospital' => $hospital
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create hospital.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function update(UpdateRequestHospital $request, Hospital $hospital)
+    public function update(UpdateRequestHospital $request, Hospital $hospital): JsonResponse
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
+            $hospital->update($validated);
 
-        $hospital->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Hospital updated successfully.',
-            'data'    => $hospital
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Hospital updated successfully.',
+                'data'    => $hospital
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update hospital.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(Hospital $hospital)

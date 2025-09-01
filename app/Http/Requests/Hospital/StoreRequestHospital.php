@@ -26,7 +26,6 @@ class StoreRequestHospital extends FormRequest
             'address' => 'required|string|max:500',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
-            'capacity' => 'required|integer|min:1',
         ];
     }
 }

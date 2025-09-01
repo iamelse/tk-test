@@ -26,7 +26,6 @@ class UpdateRequestHospital extends FormRequest
             'address' => 'required|string|max:255',
             'email' => 'required|email|unique:hospitals,email,' . $this->route('hospital')->id,
             'phone' => 'required|string|max:20',
-            'capacity' => 'required|integer|min:1',
         ];
     }
 }

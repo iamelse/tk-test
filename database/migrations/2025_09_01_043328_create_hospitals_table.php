@@ -17,9 +17,6 @@ return new class extends Migration
             $table->string('address');
             $table->string('phone');
             $table->string('email')->unique();
-            $table->string('website')->nullable();
-            $table->integer('capacity');
-            $table->date('established_at')->nullable();
             $table->timestamps();
         });
     }
