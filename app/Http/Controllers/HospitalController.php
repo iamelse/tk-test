@@ -14,7 +14,7 @@ class HospitalController extends Controller
     public function index(Request $request): View
     {
         $hospitals = Hospital::search($request->input('search'))
-                              ->orderBy('created_at', 'desc')
+                              ->latestFirst()
                               ->paginate(10)
                               ->withQueryString();
 

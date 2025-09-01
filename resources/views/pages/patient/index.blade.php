@@ -1,28 +1,28 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Dashboard - Hospitals')
+@section('title', 'Dashboard - Patients')
 
 @section('content')
 <x-module-table 
-    :module="'hospital'" 
-    :moduleTitle="'Hospital'" 
-    :items="$hospitals"
-    :columns="['#','Hospital Name','Address','Email','Phone']"
-    :fields="['id','name','address','email','phone']"
-    :indexRoute="route('hospital.index')"
+    :module="'patient'" 
+    :moduleTitle="'Patient'" 
+    :items="$patients"
+    :columns="['#','ID','Patient Name','Address','Phone','Hospital']"
+    :fields="['id','id','name','address','phone','hospital_name']"
+    :indexRoute="route('patient.index')"
 />
 
-@include('pages.hospital.save-modals')
+@include('pages.patient.save-modals')
 @endsection
 
 @section('bottom-scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const module = 'hospital';
+  const module = 'patient';
   const modalEl = document.getElementById(`${module}Modal`);
   const modal = new bootstrap.Modal(modalEl);
   const form = document.getElementById(`${module}Form`);
-  const saveBtn = document.getElementById(`saveHospitalBtn`);
+  const saveBtn = document.getElementById(`savePatientBtn`);
   const modalTitle = document.getElementById(`${module}ModalLabel`);
   const alertContainer = document.getElementById('alertContainer');
 
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const resetForm = () => {
     form.reset();
-    form.querySelector('#hospital_id').value = '';
+    form.querySelector('#patient_id').value = '';
     clearErrors();
     saveBtn.disabled = false;
     saveBtn.innerHTML = 'Save';
@@ -56,26 +56,34 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Show alert from sessionStorage
-  const successMessage = sessionStorage.getItem('hospital_alert');
-  if(successMessage){ showAlert(successMessage,'success'); sessionStorage.removeItem('hospital_alert'); }
+  const successMessage = sessionStorage.getItem('patient_alert');
+  if(successMessage){ showAlert(successMessage,'success'); sessionStorage.removeItem('patient_alert'); }
 
   modalEl.addEventListener('hidden.bs.modal', resetForm);
 
   // Open Create Modal
   document.querySelector('.open-create-modal').addEventListener('click', () => {
-    modalTitle.textContent = 'Create New Hospital';
+    modalTitle.textContent = 'Create New Patient';
     resetForm();
   });
 
   // Edit buttons
-  document.querySelectorAll('.edit-hospital-btn').forEach(btn=>{
+  document.querySelectorAll('.edit-patient-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      modalTitle.textContent = 'Edit Hospital';
-      form.querySelector('#hospital_id').value = btn.dataset.id;
+      modalTitle.textContent = 'Edit Patient';
+      form.querySelector('#patient_id').value = btn.dataset.id;
       form.querySelector('#name').value = btn.dataset.name;
       form.querySelector('#address').value = btn.dataset.address;
-      form.querySelector('#email').value = btn.dataset.email;
       form.querySelector('#phone').value = btn.dataset.phone;
+
+      // Set hospital_id
+      const hospitalSelect = form.querySelector('#hospital_id');
+      if(btn.dataset.hospitalId){
+        hospitalSelect.value = btn.dataset.hospitalId;
+      } else {
+        hospitalSelect.value = '';
+      }
+
       modal.show();
     });
   });
@@ -86,15 +94,15 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.disabled = true;
     saveBtn.innerHTML = 'Saving...';
 
-    const id = form.querySelector('#hospital_id').value;
-    const url = id ? `{{ url('hospital') }}/${id}` : `{{ route('hospital.store') }}`;
+    const id = form.querySelector('#patient_id').value;
+    const url = id ? `{{ url('patient') }}/${id}` : `{{ route('patient.store') }}`;
     const formData = new FormData(form);
     if(id) formData.append('_method','PUT');
 
     try{
       const data = await httpRequest(url,'POST',formData);
       if(data.success){
-        sessionStorage.setItem('hospital_alert', id?'Hospital updated successfully!':'Hospital created successfully!');
+        sessionStorage.setItem('patient_alert', id?'Patient updated successfully!':'Patient created successfully!');
         location.reload();
       } else if(data.errors){
         Object.entries(data.errors).forEach(([field,messages])=>{
@@ -115,17 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Delete
   document.addEventListener('click', async e=>{
-    const deleteBtn = e.target.closest('.delete-hospital-btn');
+    const deleteBtn = e.target.closest('.delete-patient-btn');
     if(!deleteBtn) return;
     const id = deleteBtn.dataset.id;
     const name = deleteBtn.dataset.name;
-    if(!confirm(`Are you sure you want to delete hospital "${name}"?`)) return;
+    if(!confirm(`Are you sure you want to delete patient "${name}"?`)) return;
     try{
-      const data = await httpRequest(`{{ url('hospital') }}/${id}`,'DELETE');
+      const data = await httpRequest(`patient) }}/${id}`,'DELETE');
       if(data.success){
-        sessionStorage.setItem('hospital_alert','Hospital deleted successfully!');
+        sessionStorage.setItem('patient_alert','Patient deleted successfully!');
         location.reload();
-      } else showAlert(data.message||'Failed to delete hospital!','danger');
+      } else showAlert(data.message||'Failed to delete patient!','danger');
     } catch(err){
       console.error(err);
       showAlert('An unexpected error occurred.','danger');

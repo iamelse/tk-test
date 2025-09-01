@@ -25,4 +25,20 @@ class Hospital extends Model
               ->orWhere('email', 'like', "%{$term}%");
         });
     }
+
+    /**
+     * Scope untuk mengurutkan data terbaru terlebih dahulu
+     */
+    public function scopeLatestFirst($query)
+    {
+        return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Relasi ke model Patient
+     */
+    public function patients()
+    {
+        return $this->hasMany(Patient::class);
+    }
 }

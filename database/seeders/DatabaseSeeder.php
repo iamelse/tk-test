@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Hospital;
+use App\Models\Patient;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -23,5 +24,6 @@ class DatabaseSeeder extends Seeder
     ]);
 
     Hospital::factory()->count(30)->create();
+    Patient::factory()->count(30)->create();
   }
 }

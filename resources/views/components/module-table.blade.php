@@ -45,11 +45,12 @@
                 </button>
                 <div class="dropdown-menu">
                   <a href="javascript:void(0);" 
-                     class="dropdown-item edit-{{ $module }}-btn"
-                     @foreach($fields as $field)
-                       data-{{ $field }}="{{ $item[$field] ?? '' }}"
-                     @endforeach>
-                    <i class="bx bx-edit-alt me-1"></i>Edit
+                    class="dropdown-item edit-{{ $module }}-btn"
+                    @foreach($fields as $field)
+                      data-{{ $field }}="{{ $item[$field] ?? '' }}"
+                    @endforeach
+                    data-hospital-id="{{ $item->hospital_id }}">
+                      <i class="bx bx-edit-alt me-1"></i>Edit
                   </a>
                   <a href="javascript:void(0);" 
                      class="dropdown-item text-danger delete-{{ $module }}-btn"
