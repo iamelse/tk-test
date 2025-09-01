@@ -3,22 +3,45 @@
 
   <!-- Card Header -->
   <div class="card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-    <div>
-      <a href="javascript:void(0);" 
-         class="btn btn-primary btn-sm open-create-modal" 
-         data-bs-toggle="modal" 
-         data-bs-target="#{{ $module }}Modal">
-        <i class="bx bx-plus me-1"></i> New {{ $moduleTitle }}
-      </a>
-    </div>
-    <form method="GET" action="{{ $indexRoute }}" class="d-flex w-md-auto">
-      <div class="input-group">
-        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search {{ strtolower($moduleTitle) }}...">
-        <button class="btn btn-primary" type="submit">
-          <i class="bx bx-search"></i>
-        </button>
+      
+      <!-- Left: New Button -->
+      <div>
+          <a href="javascript:void(0);" 
+            class="btn btn-primary btn-sm open-create-modal" 
+            data-bs-toggle="modal" 
+            data-bs-target="#{{ $module }}Modal">
+              <i class="bx bx-plus me-1"></i> New {{ $moduleTitle }}
+          </a>
       </div>
-    </form>
+
+      <!-- Right: Search + Select Hospital -->
+      <div class="d-flex flex-wrap gap-2">
+          @if(!empty($showHospitalFilter) && !empty($hospitals))
+          <form method="GET" action="{{ $indexRoute }}">
+              <div class="input-group">
+                  <select name="hospital_id" class="form-select" onchange="this.form.submit()">
+                      <option value="">-- All Hospitals --</option>
+                      @foreach($hospitals as $hospital)
+                          <option value="{{ $hospital->id }}" {{ request('hospital_id') == $hospital->id ? 'selected' : '' }}>
+                              {{ $hospital->name }}
+                          </option>
+                      @endforeach
+                  </select>
+              </div>
+          </form>
+          @endif
+
+          <!-- Search Form -->
+          <form method="GET" action="{{ $indexRoute }}" class="d-flex">
+              <div class="input-group">
+                  <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search {{ strtolower($moduleTitle) }}...">
+                  <button class="btn btn-primary" type="submit">
+                      <i class="bx bx-search"></i>
+                  </button>
+              </div>
+          </form>
+      </div>
+
   </div>
 
   <!-- Table -->

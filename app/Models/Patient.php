@@ -30,6 +30,16 @@ class Patient extends Model
     {
         return $query->orderBy('created_at', 'desc');
     }
+
+    /**
+     * Scope untuk memfilter pasien berdasarkan rumah sakit
+     */
+    public function scopeHospital($query, $hospitalId)
+    {
+        if (!$hospitalId) return $query;
+
+        return $query->where('hospital_id', $hospitalId);
+    }
     
     /**
      * Relasi ke model Hospital

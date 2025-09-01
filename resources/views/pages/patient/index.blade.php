@@ -7,9 +7,11 @@
     :module="'patient'" 
     :moduleTitle="'Patient'" 
     :items="$patients"
-    :columns="['#','ID','Patient Name','Address','Phone','Hospital']"
-    :fields="['id','id','name','address','phone','hospital_name']"
+    :columns="['#','Patient Name','Address','Phone','Hospital']"
+    :fields="['id','name','address','phone','hospital_name']"
     :indexRoute="route('patient.index')"
+    :showHospitalFilter="$showHospitalFilter"
+    :hospitals="$hospitals"
 />
 
 @include('pages.patient.save-modals')

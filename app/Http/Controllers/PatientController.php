@@ -16,15 +16,18 @@ class PatientController extends Controller
     {
         $patients = Patient::with('hospital')
                    ->search($request->input('search'))
+                   ->hospital($request->input('hospital_id'))
                    ->latestFirst()
                    ->paginate(10)
                    ->withQueryString();
+
         $hospitals = Hospital::all();
 
         return view('pages.patient.index', [
             'title' => 'Patient Dashboard',
             'patients' => $patients,
-            'hospitals' => $hospitals
+            'hospitals' => $hospitals,
+            'showHospitalFilter' => true,
         ]);
     }
 
